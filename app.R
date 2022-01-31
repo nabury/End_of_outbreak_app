@@ -6,6 +6,7 @@
 library(ggplot2)
 library(plotly)
 library(shiny)
+library(shinycssloaders)
 
 # Load default data
 defaultData <- read.csv("Likiti_outbreak.csv")
@@ -70,7 +71,7 @@ ui <- navbarPage("End of Outbreak Probability",
                  
                  p("Probability the outbreak is over"),
                  
-                 plotlyOutput("plot"), # Displays plot
+                 withSpinner(plotlyOutput("plot")), # Displays plot
                  
              ),
          ),
