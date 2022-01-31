@@ -173,30 +173,30 @@ server <- function(input, output) {
         
         times <- c(1:input$future_days)
         results <- data.frame(times, p_outbreak_over)
-        
-        plot <- ggplot(results, aes(x = times, 
-                                    y = p_outbreak_over)) +
-            geom_line()+
-            geom_point() +
-            xlab("Time since end of case data (days)") +
-            ylab("Probability outbreak over") +
-            ylim(c(0:1))
-        
-        ggplotly(plot)
-        
-        
+
         # plot <- ggplot(results, aes(x = times, 
-        #                             y = p_outbreak_over, 
-        #                             group = 1,
-        #                             text = paste("y: ",p_outbreak_over,"</br>x: ",times))) +
+        #                             y = p_outbreak_over)) +
         #     geom_line()+
         #     geom_point() +
         #     xlab("Time since end of case data (days)") +
         #     ylab("Probability outbreak over") +
         #     ylim(c(0:1))
+        # 
+        # ggplotly(plot)
         
-        # ggplotly(plot, tooltip = c("text"))
-        
+        plot <- ggplot(results, aes(x = times,
+                                    y = p_outbreak_over,
+                                    group = 1,
+                                    text = paste("Probability: ",signif(p_outbreak_over, digits = 3),
+                                                 "<br>Time: ",times))) +
+            geom_line()+
+            geom_point() +
+            xlab("Time since end of case data (days)") +
+            ylab("Probability outbreak over") +
+            ylim(c(0:1))
+
+        plot <- ggplotly(plot, tooltip = c("text"))
+
         return(plot)
     })
 }
