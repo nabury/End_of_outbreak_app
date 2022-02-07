@@ -72,7 +72,7 @@ ui <- navbarPage("End of Outbreak Probability",
                  p("Probability the outbreak is over"),
                  
                  withSpinner(plotlyOutput("plot")), # Displays plot
-                 
+
              ),
          ),
     ),
@@ -143,12 +143,13 @@ server <- function(input, output) {
         
         starting_t <- max(outbreak_data$onset)
         
-        p_outbreak_over <- rep(NA, input$future_days) # Empty vector to hold probabilities
+        p_outbreak_over <- rep(NA, (starting_t+input$future_days)) # Empty vector to hold probabilities
 
         # For each day into the future
-        for (t in 1:input$future_days) {
+        for (t in (starting_t+1):(starting_t+input$future_days)) {
 
-            current_t <- max(outbreak_data$onset + t)
+            # current_t <- max(outbreak_data$onset + t)
+            current_t <- t
             p <- 1
 
             # For each infected individual
@@ -171,31 +172,38 @@ server <- function(input, output) {
             p_outbreak_over[t] <- p # Record probability for day t in vector
         }
         
-        times <- c(1:input$future_days)
+        times <- c(1:(starting_t+input$future_days))
         results <- data.frame(times, p_outbreak_over)
-
-        # plot <- ggplot(results, aes(x = times, 
-        #                             y = p_outbreak_over)) +
+        
+        # plot <- ggplot(results, aes(x = times,
+        #                             y = p_outbreak_over,
+        #                             group = 1,
+        #                             text = paste("Probability: ",signif(p_outbreak_over, digits = 3),
+        #                                          "<br>Time: ",times))) +
         #     geom_line()+
         #     geom_point() +
+        #     geom_histogram(data = outbreak_data, aes(x = onset, y = count))
         #     xlab("Time since end of case data (days)") +
         #     ylab("Probability outbreak over") +
         #     ylim(c(0:1))
         # 
-        # ggplotly(plot)
+        # plot <- ggplotly(plot, tooltip = c("text"))
         
-        plot <- ggplot(results, aes(x = times,
-                                    y = p_outbreak_over,
-                                    group = 1,
-                                    text = paste("Probability: ",signif(p_outbreak_over, digits = 3),
-                                                 "<br>Time: ",times))) +
-            geom_line()+
-            geom_point() +
+        # Set y axes limits
+        ylim.prim <- c(0, max(table(outbreak_data$onset)))   
+        ylim.sec <- c(0, 1)
+        
+        # Make calculations based on these limits
+        ylim.b <- diff(ylim.prim)/diff(ylim.sec)
+        ylim.a <- ylim.prim[1] - ylim.b*ylim.sec[1] 
+        
+        plot <- ggplot() +
+            geom_line(data = results, aes(x = times, y = ylim.a + p_outbreak_over * ylim.b))+
+            geom_point(data = results, aes(x = times, y = ylim.a + p_outbreak_over * ylim.b)) +
+            geom_histogram(data = outbreak_data, aes(onset), fill = "#1b9621", colour = "black", binwidth = 1) +
             xlab("Time since end of case data (days)") +
-            ylab("Probability outbreak over") +
-            ylim(c(0:1))
-
-        plot <- ggplotly(plot, tooltip = c("text"))
+            scale_y_continuous("Cases", sec.axis = sec_axis(~ (. - ylim.a)/ylim.b, name = "Probability outbreak over"))
+        
 
         return(plot)
     })
