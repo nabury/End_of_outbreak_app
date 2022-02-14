@@ -69,10 +69,12 @@ ui <- navbarPage("End of Outbreak Probability",
              
              mainPanel(
                  
-                 p("Probability the outbreak is over"),
+                 p("Outbreak cases and end of outbreak probabilities"),
+                 p("Daily cases are shown using bars and the probability the outbreak is over is displayed as a line plot "),
                  
-                 withSpinner(plotlyOutput("plot")), # Displays plot
-
+                 withSpinner(plotOutput("plot")), # Displays plot
+                 # withSpinner(plotlyOutput("plot")), # Displays plot
+                 
              ),
          ),
     ),
@@ -80,19 +82,19 @@ ui <- navbarPage("End of Outbreak Probability",
     tabPanel("Info",
         
         # Panel for notes and updates
-        p("Last updated 31st January 2022"),
+        p("Last updated 14th February 2022"),
         
         p("Change log"),
         
         HTML("<ul>
             <li>Ability to upload serial interval - 31/01/22</li>
-            <li>Interactive plot (hover to see values) - 31/01/22</li>
+            <li>Plot combines cases and end of outbreak probabilities - 14/02/22</li>
             </ul>"),
         
         p("Future updates"),
         
         HTML("<ul>
-            <li>Improvements to visualisation of plot and tables</li>
+            <li>Interactive combined plot</li>
             <li>Download button for results</li>
             </ul>"),
     )
@@ -136,7 +138,8 @@ server <- function(input, output) {
     output$serial_interval_tbl <- renderTable({serial_interval()})
     
     # Create interactive plot of probability outbreak is over
-    output$plot <- renderPlotly({
+    # output$plot <- renderPlotly({
+    output$plot <- renderPlot({
         
         outbreak_data <- outbreak_data()
         w <- serial_interval()
@@ -201,9 +204,10 @@ server <- function(input, output) {
             geom_line(data = results, aes(x = times, y = ylim.a + p_outbreak_over * ylim.b))+
             geom_point(data = results, aes(x = times, y = ylim.a + p_outbreak_over * ylim.b)) +
             geom_histogram(data = outbreak_data, aes(onset), fill = "#1b9621", colour = "black", binwidth = 1) +
-            xlab("Time since end of case data (days)") +
+            xlab("Outbreak duration (days)") +
             scale_y_continuous("Cases", sec.axis = sec_axis(~ (. - ylim.a)/ylim.b, name = "Probability outbreak over"))
         
+        # plot <- ggplotly(plot, tooltip = c("text"))
 
         return(plot)
     })
