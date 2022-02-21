@@ -7,6 +7,7 @@ library(ggplot2)
 library(plotly)
 library(shiny)
 library(shinycssloaders)
+library(shinyvalidate)
 
 # Load default data
 defaultData <- read.csv("Likiti_outbreak.csv")
@@ -57,11 +58,13 @@ ui <- navbarPage("End of Outbreak Probability",
                  
                  numericInput("R", 
                               h3("R"), 
-                              value = 2.1), 
+                              value = 2.1,
+                              step = 0.05), 
                  
                  numericInput("k", 
                               h3("k"), 
-                              value = 0.18), 
+                              value = 0.18,
+                              step = 0.005), 
                  
                  sliderInput("future_days", h3("Future days"),
                              min = 1, max = 50, value = 25),
@@ -73,7 +76,9 @@ ui <- navbarPage("End of Outbreak Probability",
                  p("Daily cases are shown using bars and the probability the outbreak is over is displayed as a line plot "),
                  
                  withSpinner(plotOutput("plot")), # Displays plot
-                 # withSpinner(plotlyOutput("plot")), # Displays plot
+                 # withSpinner(plotlyOutput("plot")), # Displays plot,
+                 
+                 tableOutput('results_tbl')
                  
              ),
          ),
@@ -89,6 +94,7 @@ ui <- navbarPage("End of Outbreak Probability",
         HTML("<ul>
             <li>Ability to upload serial interval - 31/01/22</li>
             <li>Plot combines cases and end of outbreak probabilities - 14/02/22</li>
+            <li>Input validation for R and k - 21/02/22 </li>
             </ul>"),
         
         p("Future updates"),
@@ -137,29 +143,36 @@ server <- function(input, output) {
     
     output$serial_interval_tbl <- renderTable({serial_interval()})
     
+    # Check validity of numeric inputs for R and k
+    iv <- InputValidator$new()
+    iv$add_rule("R", compose_rules(sv_gt(0), sv_lte(100)))
+    iv$add_rule("k", sv_gt(0))
+    iv$enable()
+    
     # Create interactive plot of probability outbreak is over
     # output$plot <- renderPlotly({
     output$plot <- renderPlot({
         
+        req(iv$is_valid())
+
         outbreak_data <- outbreak_data()
         w <- serial_interval()
-        
-        starting_t <- max(outbreak_data$onset)
-        
+
+        starting_t <- max(outbreak_data$Onset_day)
+
         p_outbreak_over <- rep(NA, (starting_t+input$future_days)) # Empty vector to hold probabilities
 
         # For each day into the future
         for (t in (starting_t+1):(starting_t+input$future_days)) {
 
-            # current_t <- max(outbreak_data$onset + t)
             current_t <- t
             p <- 1
 
             # For each infected individual
             for (i in 1:nrow(outbreak_data)) {
 
-                A <- sum(outbreak_data$infector == i) # Number of infections caused by individual i
-                TR <- current_t - outbreak_data$onset[i] - 1 # Time remaining in outbreak (time between onset date and last onset date)
+                A <- sum(outbreak_data$Infector_ID == i) # Number of infections caused by individual i
+                TR <- current_t - outbreak_data$Onset_day[i] - 1 # Time remaining in outbreak (time between onset date and last onset date)
 
                 div <- 0
 
@@ -174,10 +187,10 @@ server <- function(input, output) {
 
             p_outbreak_over[t] <- p # Record probability for day t in vector
         }
-        
+
         times <- c(1:(starting_t+input$future_days))
         results <- data.frame(times, p_outbreak_over)
-        
+
         # plot <- ggplot(results, aes(x = times,
         #                             y = p_outbreak_over,
         #                             group = 1,
@@ -185,32 +198,35 @@ server <- function(input, output) {
         #                                          "<br>Time: ",times))) +
         #     geom_line()+
         #     geom_point() +
-        #     geom_histogram(data = outbreak_data, aes(x = onset, y = count))
+        #     geom_histogram(data = outbreak_data, aes(x = Onset_day, y = count))
         #     xlab("Time since end of case data (days)") +
         #     ylab("Probability outbreak over") +
         #     ylim(c(0:1))
-        # 
+        #
         # plot <- ggplotly(plot, tooltip = c("text"))
-        
+
         # Set y axes limits
-        ylim.prim <- c(0, max(table(outbreak_data$onset)))   
+        ylim.prim <- c(0, max(table(outbreak_data$Onset_day)))
         ylim.sec <- c(0, 1)
-        
+
         # Make calculations based on these limits
         ylim.b <- diff(ylim.prim)/diff(ylim.sec)
-        ylim.a <- ylim.prim[1] - ylim.b*ylim.sec[1] 
-        
+        ylim.a <- ylim.prim[1] - ylim.b*ylim.sec[1]
+
         plot <- ggplot() +
             geom_line(data = results, aes(x = times, y = ylim.a + p_outbreak_over * ylim.b))+
             geom_point(data = results, aes(x = times, y = ylim.a + p_outbreak_over * ylim.b)) +
-            geom_histogram(data = outbreak_data, aes(onset), fill = "#1b9621", colour = "black", binwidth = 1) +
+            geom_histogram(data = outbreak_data, aes(Onset_day), fill = "#1b9621", colour = "black", binwidth = 1) +
             xlab("Outbreak duration (days)") +
             scale_y_continuous("Cases", sec.axis = sec_axis(~ (. - ylim.a)/ylim.b, name = "Probability outbreak over"))
-        
+
         # plot <- ggplotly(plot, tooltip = c("text"))
 
         return(plot)
     })
+    
+    output$results_tbl <- renderTable({results()})
+    
 }
 
 shinyApp(ui = ui, server = server)
