@@ -98,7 +98,7 @@ ui <- navbarPage("End of Outbreak Probability",
     
     tabPanel("Info",
         
-        p("Last updated 14th February 2022"),
+        p("Last updated 21st February 2022"),
         
         p("Change log"),
         
@@ -107,12 +107,16 @@ ui <- navbarPage("End of Outbreak Probability",
             <li>Plot combines cases and end of outbreak probabilities - 14/02/22</li>
             <li>Display results in a table and enable download as csv file - 21/02/22 </li>
             <li>Input validation for R and k - 21/02/22 </li>
+            <li>Bug fixes with uploaded serial intervals - 21/02/22</li>
             </ul>"),
         
         p("Future updates"),
         
         HTML("<ul>
             <li>Interactive combined plot</li>
+            <li>Documentation including guidance on uploading csv files</li>
+            <li>Button for when inputs are updated</li>
+            <li>Ability to reset preloaded data</li>
             </ul>"),
     )
 )
@@ -145,14 +149,22 @@ server <- function(input, output) {
         
         else {
             df2 <- read.csv(input$serial_interval_csv$datapath)
+            df2 <- as.vector(df2$Serial_interval)
             return(df2)
         }
+    })
+    
+    serial_interval_df <- reactive ({
+        serial_interval_df <- as.data.frame(serial_interval())
+        colnames(serial_interval_df) <- ("Serial_interval")
+        return(serial_interval_df)
     })
     
     # Create table of the outbreak data
     output$outbreak_tbl <- renderTable({outbreak_data()})
     
-    output$serial_interval_tbl <- renderTable({serial_interval()})
+    # Create table of the serial interval
+    output$serial_interval_tbl <- renderTable({serial_interval_df()}, digits = 3)
     
     # Check validity of numeric inputs for R and k
     iv <- InputValidator$new()
@@ -167,12 +179,16 @@ server <- function(input, output) {
         outbreak_data <- outbreak_data()
         w <- serial_interval()
         
-        starting_t <- max(outbreak_data$Onset_day)
+        starting_t <- max(outbreak_data$Onset_day) # End of case data, start of end of outbreak probability calculation
+        max_t <- starting_t + input$future_days # Total days from first case to end of calculation
         
-        p_outbreak_over <- rep(NA, (starting_t+input$future_days)) # Empty vector to hold probabilities
+        # Lengthen serial interval
+        if (length(w) < max_t) {w <- c(w, rep(0, max_t - length(w)))}
+            
+        p_outbreak_over <- rep(NA, (max_t)) # Empty vector to hold probabilities
         
         # For each day into the future
-        for (t in (starting_t+1):(starting_t+input$future_days)) {
+        for (t in (starting_t+1):(max_t)) {
             
             current_t <- t
             p <- 1
