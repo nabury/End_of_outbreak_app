@@ -48,7 +48,7 @@ ui <- navbarPage("End of Outbreak Probability",
         ),
     ),
     
-    tabPanel("Results",
+    tabPanel("End of Outbreak Probability",
              
          sidebarLayout(
              
@@ -78,15 +78,26 @@ ui <- navbarPage("End of Outbreak Probability",
                  withSpinner(plotOutput("plot")), # Displays plot
                  # withSpinner(plotlyOutput("plot")), # Displays plot,
                  
-                 tableOutput('results_tbl')
-                 
              ),
          ),
     ),
     
+    tabPanel("Table of results",
+    
+        sidebarLayout(
+            
+            sidebarPanel(
+                downloadButton("downloadData", "Download results as .csv")
+            ),
+            
+            mainPanel(
+                tableOutput('results_tbl')
+            ),
+        ),
+    ),
+    
     tabPanel("Info",
         
-        # Panel for notes and updates
         p("Last updated 14th February 2022"),
         
         p("Change log"),
@@ -94,6 +105,7 @@ ui <- navbarPage("End of Outbreak Probability",
         HTML("<ul>
             <li>Ability to upload serial interval - 31/01/22</li>
             <li>Plot combines cases and end of outbreak probabilities - 14/02/22</li>
+            <li>Display results in a table and enable download as csv file - 21/02/22 </li>
             <li>Input validation for R and k - 21/02/22 </li>
             </ul>"),
         
@@ -101,7 +113,6 @@ ui <- navbarPage("End of Outbreak Probability",
         
         HTML("<ul>
             <li>Interactive combined plot</li>
-            <li>Download button for results</li>
             </ul>"),
     )
 )
@@ -149,47 +160,51 @@ server <- function(input, output) {
     iv$add_rule("k", sv_gt(0))
     iv$enable()
     
-    # Create interactive plot of probability outbreak is over
-    # output$plot <- renderPlotly({
-    output$plot <- renderPlot({
-        
+    # Process end of outbreak probabilities
+    results <- reactive ({
         req(iv$is_valid())
-
+        
         outbreak_data <- outbreak_data()
         w <- serial_interval()
-
+        
         starting_t <- max(outbreak_data$Onset_day)
-
+        
         p_outbreak_over <- rep(NA, (starting_t+input$future_days)) # Empty vector to hold probabilities
-
+        
         # For each day into the future
         for (t in (starting_t+1):(starting_t+input$future_days)) {
-
+            
             current_t <- t
             p <- 1
-
+            
             # For each infected individual
             for (i in 1:nrow(outbreak_data)) {
-
+                
                 A <- sum(outbreak_data$Infector_ID == i) # Number of infections caused by individual i
                 TR <- current_t - outbreak_data$Onset_day[i] - 1 # Time remaining in outbreak (time between onset date and last onset date)
-
+                
                 div <- 0
-
+                
                 # Calculate divisor sum
                 for (j in A:100) {
                     div <- div + dnbinom(j, size = input$k, mu = input$R) * (factorial(j)/factorial(A)) * ((1-(sum(w[1:TR])))^(j-A) / factorial(j-A))
                 }
-
+                
                 # Calculate individual i's probability and multiply by previous
                 p <- p * (dnbinom(A, size = input$k, mu = input$R) / div)
             }
-
+            
             p_outbreak_over[t] <- p # Record probability for day t in vector
         }
-
+        
         times <- c(1:(starting_t+input$future_days))
         results <- data.frame(times, p_outbreak_over)
+        return(results)
+    })
+    
+    # Create interactive plot of probability outbreak is over
+    # output$plot <- renderPlotly({
+    output$plot <- renderPlot({
 
         # plot <- ggplot(results, aes(x = times,
         #                             y = p_outbreak_over,
@@ -204,7 +219,10 @@ server <- function(input, output) {
         #     ylim(c(0:1))
         #
         # plot <- ggplotly(plot, tooltip = c("text"))
-
+        
+        results <- results()
+        outbreak_data <- outbreak_data()
+        
         # Set y axes limits
         ylim.prim <- c(0, max(table(outbreak_data$Onset_day)))
         ylim.sec <- c(0, 1)
@@ -225,7 +243,19 @@ server <- function(input, output) {
         return(plot)
     })
     
-    output$results_tbl <- renderTable({results()})
+    output$results_tbl <- renderTable({
+        results()%>%
+        rename(Outbreak_day = times, End_of_outbreak_probability = p_outbreak_over)
+    })
+    
+    output$downloadData <- downloadHandler(
+        filename = "End_of_outbreak.csv",
+        content = function(file) {
+            write.csv(results() %>%
+                          rename(Outbreak_day = times, End_of_outbreak_probability = p_outbreak_over), 
+                      file)
+        }
+    )
     
 }
 
