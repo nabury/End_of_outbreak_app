@@ -1,5 +1,5 @@
 # End_of_outbreak_app
-App to generate and display end of outbreak probabilities for infectious disease outbreaks.  
+Shiny app that generates and displays end of outbreak probabilities for infectious disease outbreaks.  
 
 The app comes pre-loaded with data relating to a small (8 case) outbreak of Ebola in the Likati region of DRC in 2017.  
 
