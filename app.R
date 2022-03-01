@@ -33,7 +33,11 @@ ui <- navbarPage("End of Outbreak Probability",
                           multiple = TRUE,
                           accept = c("text/csv",
                                      "text/comma-separated-values,text/plain",
-                                     ".csv"))
+                                     ".csv")),
+                # actionButton("button", "Reset to pre-loaded data")
+                # Reset button resets the data but then does not allow new uploaded files to be displayed
+                
+                p("See documentation tab for guidance on uploading data")
             ),
             
             mainPanel(
@@ -68,6 +72,9 @@ ui <- navbarPage("End of Outbreak Probability",
                  
                  sliderInput("future_days", h3("Future days"),
                              min = 1, max = 50, value = 25),
+                 
+                 actionButton("go", "Plot")
+                 
              ),
              
              mainPanel(
@@ -96,9 +103,26 @@ ui <- navbarPage("End of Outbreak Probability",
         ),
     ),
     
-    tabPanel("Info",
+    tabPanel("Documentation",
+             
+        HTML("<b>Outbreak data file</b>"),
         
-        p("Last updated 21st February 2022"),
+        p("A csv file containing outbreak data can be uploaded to the app.
+          The file must consist of three columns with the headings named exactly: ID, Onset_ID, Infector_ID.
+          All columns must contain only numeric, integer data."),
+        
+        HTML("<ul>
+            <li>Column 1: ID must be numbered in integer order i.e. 1,2,3. </li>
+            <li>Column 2: Onset_ID contains the outbreak day when the case began.</li>
+            <li>Infector_ID; Refers to the ID of the individual who infected this case. If this is unknown, it should be set to zero.</li>
+            </ul>"),
+        
+        HTML("<b>Serial interval file</b>"),
+        
+        p("A serial interval can also be uploaded. This must contain only one column of data with the heading: Serial_interval.
+          This column should sum to 1."),
+        
+        HTML("<bLast updated 1st March 2022</b>"),
         
         p("Change log"),
         
@@ -108,14 +132,14 @@ ui <- navbarPage("End of Outbreak Probability",
             <li>Display results in a table and enable download as csv file - 21/02/22 </li>
             <li>Input validation for R and k - 21/02/22 </li>
             <li>Bug fixes with uploaded serial intervals - 21/02/22</li>
+            <li>Button for when inputs are updated - 01/03/22</li>
+            <li>Documentation including guidance on uploading csv files - 01/03/22</li>
             </ul>"),
         
         p("Future updates"),
         
         HTML("<ul>
             <li>Interactive combined plot</li>
-            <li>Documentation including guidance on uploading csv files</li>
-            <li>Button for when inputs are updated</li>
             <li>Ability to reset preloaded data</li>
             </ul>"),
     )
@@ -126,8 +150,13 @@ server <- function(input, output) {
     # Reactively change outbreak data between default and uploaded file
     outbreak_data <- reactive({
         
+        eventReactive(input$button, {
+            input$outbreak_csv <- NULL
+        })
+
+        # if (is.null(input$outbreak_csv) | input$button) {return(defaultData)}
         if (is.null(input$outbreak_csv)) {return(defaultData)}
-       
+
         else {
             df <- read.csv(input$outbreak_csv$datapath)
             return(df)
@@ -137,8 +166,9 @@ server <- function(input, output) {
     # Reactively change serial interval between default and uploaded file
     serial_interval <- reactive({
         
+        # if (is.null(input$serial_interval_csv) | input$button) {
         if (is.null(input$serial_interval_csv)) {
-            
+        
             mean <- 15.3; sd <- 9.3
             alpha <- (mean/sd)^2
             beta <- sd^2/mean
@@ -173,7 +203,7 @@ server <- function(input, output) {
     iv$enable()
     
     # Process end of outbreak probabilities
-    results <- reactive ({
+    results <- eventReactive (input$go, {
         req(iv$is_valid())
         
         outbreak_data <- outbreak_data()
