@@ -3,7 +3,7 @@ Shiny app that generates and displays end of outbreak probabilities for infectio
 
 App.r contains all the code to run the app.
 
-Required R libraries: ggplot2, plotly, shiny, shinycssloaders, shinyjs, shinyvalidate.
+Required R libraries: ggplot2, plotly, shiny, shinycssloaders, shinyvalidate.
 
 The app requires a csv file (Likiti_outbreak.csv) that contains data relating to a small (8 case) outbreak of Ebola in the Likati region of DRC in 2017. 
 
