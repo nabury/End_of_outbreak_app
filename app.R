@@ -37,6 +37,8 @@ ui <- navbarPage("End of Outbreak Probability",
                 
                 # Action button to reset to pre-loaded data
                 actionButton("button", "Reset to pre-loaded data"),
+                
+                hr(),
 
                 p("See documentation tab for guidance on uploading data")
             ),
@@ -76,7 +78,7 @@ ui <- navbarPage("End of Outbreak Probability",
                  
                  # Button to complete calculations
                  p("Calculate outbreak probabilities using the selected inputs:"),
-                 actionButton("go", "Click")
+                 actionButton("go", "Plot")
                  
              ),
              
