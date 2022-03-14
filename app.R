@@ -125,9 +125,9 @@ ui <- navbarPage("End of Outbreak Probability",
         HTML("<b>Serial interval file</b>"),
         
         p("A serial interval can also be uploaded. This must contain only one column of data with the heading: Serial_interval.
-          This column should sum to 1."),
+          This column should sum to 1. Columns with a sum greater than 1, less than 0.99 or containing negative values will show an error message."),
         
-        HTML("<b>Last updated 4th March 2022</b>"),
+        HTML("<b>Last updated 14th March 2022</b>"),
         
         p("Change log"),
         
@@ -139,7 +139,8 @@ ui <- navbarPage("End of Outbreak Probability",
             <li>Bug fixes with uploaded serial intervals - 21/02/22</li>
             <li>Button for when inputs are updated - 01/03/22</li>
             <li>Documentation including guidance on uploading csv files - 01/03/22</li>
-            <li>Ability to reset preloaded data - 04/03/22</li>
+            <li>Ability to reset preloaded data - 14/03/22</li>
+            <li>Validity checking of serial interval inputs - 14/03/22</li>
             </ul>"),
         
         p("Future updates"),
@@ -175,7 +176,6 @@ server <- function(input, output, session) {
     # Reactively change serial interval between default and uploaded file
     serial_interval <- reactive({
         
-        # if (is.null(input$serial_interval_csv) | input$button) {
         if (is.null(input$serial_interval_csv)) {
         
             mean <- 15.3; sd <- 9.3
@@ -189,6 +189,13 @@ server <- function(input, output, session) {
         else {
             df2 <- read.csv(input$serial_interval_csv$datapath)
             df2 <- as.vector(df2$Serial_interval)
+            
+            # Check for validity
+            validate(
+                need(sum(df2) <= 1, "Serial interval too large"),
+                need(sum(df2) >= 0.99, "Serial interval too small"),
+                need(!any(df2<0), "Negative value in serial interval")
+            )
             return(df2)
         }
     })
@@ -205,7 +212,7 @@ server <- function(input, output, session) {
     
     # Create table of the serial interval
     output$serial_interval_tbl <- renderTable({serial_interval_df()}, digits = 3)
-    
+
     # Check validity of numeric inputs for R and k
     iv <- InputValidator$new()
     iv$add_rule("R", compose_rules(sv_gt(0), sv_lte(100))) # 0 < R <= 100
@@ -225,7 +232,7 @@ server <- function(input, output, session) {
         starting_t <- max(outbreak_data$Onset_day) # End of case data, start of end of outbreak probability calculation
         max_t <- starting_t + input$future_days # Total days from first case to end of calculation
         
-        # Lengthen serial interval
+        # Lengthen serial interval if necessary
         if (length(w) < max_t) {w <- c(w, rep(0, max_t - length(w)))} 
 
         # Create empty vector to store end of outbreak probabilities
