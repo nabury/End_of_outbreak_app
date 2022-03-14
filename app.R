@@ -303,6 +303,7 @@ server <- function(input, output, session) {
             geom_line(data = results, aes(x = times, y = ylim.a + p_outbreak_over * ylim.b))+
             geom_point(data = results, aes(x = times, y = ylim.a + p_outbreak_over * ylim.b)) +
             geom_histogram(data = outbreak_data, aes(Onset_day), fill = "#1b9621", colour = "black", binwidth = 1) +
+            ggtitle(paste("R = ", input$R, " k = ", input$k)) +
             xlab("Outbreak duration (days)") +
             scale_y_continuous("Cases", sec.axis = sec_axis(~ (. - ylim.a)/ylim.b, name = "Probability outbreak over"))
 
