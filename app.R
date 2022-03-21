@@ -88,9 +88,11 @@ ui <- navbarPage("End of Outbreak Probability",
                               value = 0.18,
                               step = 0.005), 
                  
-                 # Days to be plotted after last reported case
-                 sliderInput("future_days", h5("Days after last known case"),
-                             min = 1, max = 50, value = 25),
+                 # # Days to be plotted after last reported case
+                 # sliderInput("future_days", h5("Days after last known case"),
+                 #             min = 1, max = 50, value = 25),
+                 
+                 uiOutput("future_days") # Reactive future days slider
              ),
              
              mainPanel(
@@ -140,27 +142,7 @@ ui <- navbarPage("End of Outbreak Probability",
         p("A serial interval can also be uploaded. This must contain only one column of data with the heading: Serial_interval.
           This column should sum to 1. Columns with a sum greater than 1, less than 0.99 or containing negative values will show an error message."),
         
-        HTML("<b>Last updated 14th March 2022</b>"),
-        
-        p("Change log"),
-        
-        HTML("<ul>
-            <li>Ability to upload serial interval - 31/01/22</li>
-            <li>Plot combines cases and end of outbreak probabilities - 14/02/22</li>
-            <li>Display results in a table and enable download as csv file - 21/02/22 </li>
-            <li>Input validation for R and k - 21/02/22 </li>
-            <li>Bug fixes with uploaded serial intervals - 21/02/22</li>
-            <li>Button for when inputs are updated - 01/03/22</li>
-            <li>Documentation including guidance on uploading csv files - 01/03/22</li>
-            <li>Ability to reset preloaded data - 14/03/22</li>
-            <li>Validity checking of serial interval inputs - 14/03/22</li>
-            </ul>"),
-        
-        p("Future updates"),
-        
-        HTML("<ul>
-            <li>Interactive combined plot</li>
-            </ul>"),
+        HTML("<b>Last updated 21st March 2022</b>")
     )
 )
 
@@ -236,6 +218,13 @@ server <- function(input, output, session) {
     iv$add_rule("R", compose_rules(sv_gt(0), sv_lte(100))) # 0 < R <= 100
     iv$add_rule("k", sv_gt(0)) # k > 0
     iv$enable()
+    
+    # Days to be plotted after last reported case
+    output$future_days <- renderUI({
+        w <- serial_interval()
+        sliderInput("future_days", h5("Days after last known case"),
+                    min = 1, max = length(w), value = 1)
+    })
     
     # Calculate end of outbreak probabilities
     results <- eventReactive (input$go, {
