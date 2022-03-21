@@ -247,32 +247,37 @@ server <- function(input, output, session) {
         outbreak_data <- outbreak_data()
         w <- serial_interval()
         
-        starting_t <- max(outbreak_data$Onset_day) # End of case data, start of end of outbreak probability calculation
-        max_t <- starting_t + input$future_days # Total days from first case to end of calculation
+        # starting_t <- max(outbreak_data$Onset_day) # End of case data, start of end of outbreak probability calculation
+        end_t <- max(outbreak_data$Onset_day) + input$future_days # Total days from first case to end of calculation
         
         # Lengthen serial interval if necessary
-        if (length(w) < max_t) {w <- c(w, rep(0, max_t - length(w)))} 
+        if (length(w) < end_t) {w <- c(w, rep(0, end_t - length(w)))} 
 
         # Create empty vector to store end of outbreak probabilities
-        p_outbreak_over <- rep(NA, (max_t)) 
+        p_outbreak_over <- rep(NA, end_t) 
         
         # For each day into the future
-        for (t in (starting_t+1):(max_t)) {
+        for (t in 1:end_t) {
             
-            current_t <- t
+            current_cases <- sum(outbreak_data$Onset_day <= t) # Select only the cases that have already occured
             p <- 1
             
             # For each infected individual
-            for (i in 1:nrow(outbreak_data)) {
+            for (i in 1:current_cases) {
                 
-                A <- sum(outbreak_data$Infector_ID == i) # Number of infections caused by individual i
-                TR <- current_t - outbreak_data$Onset_day[i] - 1 # Time remaining in outbreak (time between onset date and last onset date)
-                
+                A <- sum(outbreak_data$Infector_ID == i & outbreak_data$Onset_day <= t) # Number of infections already caused by individual i
+                TR <- t - outbreak_data$Onset_day[i] # Difference between current t and reporting date
                 div <- 0
                 
                 # Calculate divisor sum
-                for (j in A:100) {
-                    div <- div + dnbinom(j, size = input$k, mu = input$R) * (factorial(j)/factorial(A)) * ((1-(sum(w[1:TR])))^(j-A) / factorial(j-A))
+                if (TR == 0) {
+                    for (j in A:100) {
+                        div <- div + dnbinom(j, size = input$k, mu = input$R) * (factorial(j)/factorial(A)) * (1^(j-A) / factorial(j-A))
+                    }
+                } else {
+                    for (j in A:100) {
+                        div <- div + dnbinom(j, size = input$k, mu = input$R) * (factorial(j)/factorial(A)) * ((1-(sum(w[1:TR])))^(j-A) / factorial(j-A))
+                    }
                 }
                 
                 # Calculate individual i's probability and multiply by previous
@@ -283,7 +288,7 @@ server <- function(input, output, session) {
         }
         
         # Create data frame of times and outbreak probabilities
-        times <- c(1:(starting_t+input$future_days))
+        times <- c(1:end_t)
         results <- data.frame(times, p_outbreak_over)
         return(results)
     })
@@ -317,14 +322,16 @@ server <- function(input, output, session) {
         ylim.b <- diff(ylim.prim)/diff(ylim.sec)
         ylim.a <- ylim.prim[1] - ylim.b*ylim.sec[1]
 
-        plot <- ggplot() +
-            geom_line(data = results, aes(x = times, y = ylim.a + p_outbreak_over * ylim.b))+
-            geom_point(data = results, aes(x = times, y = ylim.a + p_outbreak_over * ylim.b)) +
+        sub_plot <- ggplot() +
             geom_histogram(data = outbreak_data, aes(Onset_day), fill = "#1b9621", colour = "black", binwidth = 1) +
             ggtitle(paste("R =", input$R, " k =", input$k)) +
             xlab("Outbreak duration (days)") +
             scale_y_continuous("Cases", sec.axis = sec_axis(~ (. - ylim.a)/ylim.b, name = "Probability outbreak over"))
-
+        
+        plot <- sub_plot +
+            geom_line(data = results, aes(x = times, y = ylim.a + p_outbreak_over * ylim.b)) +
+            geom_point(data = results, aes(x = times, y = ylim.a + p_outbreak_over * ylim.b)) 
+        
         # plot <- ggplotly(plot, tooltip = c("text"))
 
         return(plot)
