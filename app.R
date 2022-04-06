@@ -54,8 +54,6 @@ ui <- navbarPage("End of Outbreak Probability",
                 HTML("<b>Serial interval distribution</b>"),
                 
                 plotOutput('serial_interval_plot'), # Display the serial interval as a histogram
-                
-                # tableOutput('serial_interval_tbl') # Display the serial interval in a table
             ),
         ),
     ),
@@ -78,19 +76,15 @@ ui <- navbarPage("End of Outbreak Probability",
                  
                  # Input for R
                  numericInput("R", 
-                              label = "R", 
+                              label = "Reproduction number (R)", 
                               value = 2.1,
                               step = 0.05), 
                  
-                 # Input for k (overdispersion parameter)
+                 # Input for k (dispersion parameter)
                  numericInput("k", 
-                              label = "k", 
+                              label = "Dispersion parameter (k)", 
                               value = 0.18,
                               step = 0.005), 
-                 
-                 # # Days to be plotted after last reported case
-                 # sliderInput("future_days", h5("Days after last known case"),
-                 #             min = 1, max = 50, value = 25),
                  
                  uiOutput("future_days") # Reactive future days slider
              ),
@@ -142,7 +136,7 @@ ui <- navbarPage("End of Outbreak Probability",
         p("A serial interval can also be uploaded. This must contain only one column of data with the heading: Serial_interval.
           This column should sum to 1. Columns with a sum greater than 1, less than 0.99 or containing negative values will show an error message."),
         
-        HTML("<b>Last updated 21st March 2022</b>")
+        HTML("<b>Last updated 31st March 2022</b>")
     )
 )
 
@@ -159,7 +153,6 @@ server <- function(input, output, session) {
             input$outbreak_csv <- NULL
         })
 
-        # if (is.null(input$outbreak_csv) | input$button) {return(defaultData)}
         if (is.null(input$outbreak_csv)) {return(defaultData)}
 
         else {
@@ -195,23 +188,13 @@ server <- function(input, output, session) {
         }
     })
     
-    # # Convert to df with correct column name
-    # serial_interval_df <- reactive ({
-    #     serial_interval_df <- as.data.frame(serial_interval())
-    #     colnames(serial_interval_df) <- ("Serial_interval")
-    #     return(serial_interval_df)
-    # })
-    
     # Create table of the outbreak data
     output$outbreak_tbl <- renderTable({outbreak_data()})
     
     # Create histogram of the serial interval
     output$serial_interval_plot <- renderPlot({
-        barplot(serial_interval(), xlab = "Serial interval duration", ylab = "Density")
+        barplot(serial_interval(), xlab = "Serial interval duration", ylab = "Probability")
     })
-    
-    # # Create table of the serial interval
-    # output$serial_interval_tbl <- renderTable({serial_interval_df()}, digits = 3)
 
     # Check validity of numeric inputs for R and k
     iv <- InputValidator$new()
@@ -222,8 +205,8 @@ server <- function(input, output, session) {
     # Days to be plotted after last reported case
     output$future_days <- renderUI({
         w <- serial_interval()
-        sliderInput("future_days", h5("Days after last known case"),
-                    min = 1, max = length(w), value = 1)
+        sliderInput("future_days", h5("Days considered after last known case"),
+                    min = 1, max = length(w), value = length(w)/2, step = 1)
     })
     
     # Calculate end of outbreak probabilities
@@ -232,11 +215,14 @@ server <- function(input, output, session) {
         # Check input validity
         req(iv$is_valid()) 
         
+        # Labels for reactive plot
+        R_lab <- input$R
+        k_lab <- input$k
+        
         # Get input data
         outbreak_data <- outbreak_data()
         w <- serial_interval()
         
-        # starting_t <- max(outbreak_data$Onset_day) # End of case data, start of end of outbreak probability calculation
         end_t <- max(outbreak_data$Onset_day) + input$future_days # Total days from first case to end of calculation
         
         # Lengthen serial interval if necessary
@@ -279,13 +265,14 @@ server <- function(input, output, session) {
         # Create data frame of times and outbreak probabilities
         times <- c(1:end_t)
         results <- data.frame(times, p_outbreak_over)
-        return(results)
+        resultsList <- list("results" = results, "R_lab" = R_lab, "k_lab" = k_lab)
+        return(resultsList)
     })
     
     # Create interactive plot of probability outbreak is over
     # output$plot <- renderPlotly({
     output$plot <- renderPlot({
-
+        
         # plot <- ggplot(results, aes(x = times,
         #                             y = p_outbreak_over,
         #                             group = 1,
@@ -300,7 +287,10 @@ server <- function(input, output, session) {
         #
         # plot <- ggplotly(plot, tooltip = c("text"))
         
-        results <- results()
+        inputs <- results()
+        results <- inputs$results
+        R_lab <- inputs$R_lab
+        k_lab <- inputs$k_lab
         outbreak_data <- outbreak_data()
         
         # Set y axes limits
@@ -313,7 +303,7 @@ server <- function(input, output, session) {
 
         sub_plot <- ggplot() +
             geom_histogram(data = outbreak_data, aes(Onset_day), fill = "#1b9621", colour = "black", binwidth = 1) +
-            ggtitle(paste("R =", input$R, " k =", input$k)) +
+            ggtitle(paste("R =", R_lab, " k =", k_lab)) +
             xlab("Outbreak duration (days)") +
             scale_y_continuous("Cases", sec.axis = sec_axis(~ (. - ylim.a)/ylim.b, name = "Probability outbreak over"))
         
