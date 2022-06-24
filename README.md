@@ -1,6 +1,8 @@
 # End of outbreak app
 Shiny app that generates and displays end of outbreak probabilities for infectious disease outbreaks.
 
+Download the folder named App to be able to run the app on your own machine using R.   
+
 App.r contains all the code to run the app.
 
 Required R libraries: ggplot2, plotly, shiny, shinycssloaders, shinyvalidate.
