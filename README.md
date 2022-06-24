@@ -1,13 +1,12 @@
-# End of outbreak app
+# End of outbreak probabilities
+
 Shiny app that generates and displays end of outbreak probabilities for infectious disease outbreaks.
 
 Download the folder named App to be able to run the app on your own machine using R.  
 
-Required R libraries: ggplot2, plotly, shiny, shinycssloaders, shinyvalidate.
-
 App folder contains:  
 
-(1) App.r - R Shiny code
+(1) App.r - R Shiny code. Required R libraries: ggplot2, plotly, shiny, shinycssloaders, shinyvalidate.
 
 (2) Likiti_outbreak.csv containing the pre-loaded outbreak data relating to a 8 case outbreak of Ebola in the Likati region of DRC in 2017. 
 
