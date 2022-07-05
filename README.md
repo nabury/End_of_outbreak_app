@@ -8,9 +8,13 @@ App folder contains:
 
 (1) App.r - R Shiny code. Required R libraries: ggplot2, plotly, shiny, shinycssloaders, shinyvalidate.
 
-(2) Likiti_outbreak.csv containing the pre-loaded outbreak data relating to a 8 case outbreak of Ebola in the Likati region of DRC in 2017. 
+(2) Likiti_outbreak.csv containing the case study data relating to a 8 case outbreak of Ebola in the Likati region of DRC in 2017.  
 
-(3) www subfolder containing images displayed in the app
+(3) Nipah_outbreak.csv containing the case study data relating to an outbreak of Nipah in Bangladesh.  
+
+(4) Nipah_serial_interval.csv containing the serial interval for the Nipah Bangladesh outbreak.  
+
+(5) www subfolder containing images displayed in the app
 
 Users are able to upload their own outbreak data and serial interval data to the app in the form of csv files.  
 
