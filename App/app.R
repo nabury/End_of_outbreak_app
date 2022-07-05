@@ -15,7 +15,7 @@ ui <- navbarPage("End of Outbreak Probability",
     
     tabPanel("Home",
              
-        h3("End of outbreak probability v1"),
+        h3("End of Outbreak Probability v1"),
         
         br(),
         
@@ -33,11 +33,16 @@ ui <- navbarPage("End of Outbreak Probability",
                 
             column (5, br(),
                     
-                HTML("Calculate the end of outbreak probability for outbreaks with a known transmission tree."),
-                HTML("App powered by R Shiny")
+                h4("Calculate the end of outbreak probability for outbreaks with a known transmission tree."),
+                p("Powered by R Shiny")
             ),
         ),
-             
+        
+        hr(),
+        p("Naomi Bradbury, Francesca Lovell-Read & Robin Thompson"),
+        p("This app is still in active development. For feedback or questions about the app, please contact Naomi Bradbury n.marsden.1@warwick.ac.uk"),
+        p("If you use this app, please cite it as: [insert later]"),
+        HTML("Code and additional files are available on <a href='https://github.com/nabury/End_of_outbreak_app'>Github</a>"),
     ),
                  
     tabPanel("Load data",
@@ -161,7 +166,7 @@ ui <- navbarPage("End of Outbreak Probability",
         p("A serial interval can also be uploaded. This must contain only one column of data with the heading: Serial_interval.
           This column should sum to 1. Columns with a sum greater than 1, less than 0.99 or containing negative values will show an error message."),
         
-        HTML("<b>Last updated 1st June 2022</b>")
+        HTML("<b>Last updated 5th July 2022</b>")
     )
 )
 
