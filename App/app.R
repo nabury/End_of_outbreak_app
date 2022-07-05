@@ -9,7 +9,9 @@ library(shiny)
 library(shinycssloaders)
 library(shinyvalidate)
 
-defaultData <- read.csv("Likiti_outbreak.csv") # Load default data (Ebola Likiti)
+EbolaData <- read.csv("Likiti_outbreak.csv") # Load Ebola data
+NipahData <- read.csv("Nipah_outbreak.csv") # Load Nipah data
+NipahSerialInterval <- read.csv("Nipah_serial_interval.csv") # Load Nipah serial interval 
 
 ui <- navbarPage("End of Outbreak Probability",
     
@@ -50,6 +52,13 @@ ui <- navbarPage("End of Outbreak Probability",
         sidebarLayout(
             
             sidebarPanel(
+              
+                # Case study selector
+                selectInput("case_study", label = ("Select case study"), 
+                          choices = list("Ebola Likiti" = 1, "Nipah Bangladesh" = 2), 
+                          selected = 1),
+                
+                h4("OR"),
         
                 # Import an outbreak data csv file
                 fileInput("outbreak_csv", "Select outbreak data file (.csv format) to upload",
@@ -163,7 +172,7 @@ ui <- navbarPage("End of Outbreak Probability",
         
         HTML("<b>Serial interval file</b>"),
         
-        p("A serial interval can also be uploaded. This must contain only one column of data with the heading: Serial_interval.
+        p("A discrete serial interval can also be uploaded. This must contain only one column of data with the heading: Serial_interval.
           This column should sum to 1. Columns with a sum greater than 1, less than 0.99 or containing negative values will show an error message."),
         
         HTML("<b>Last updated 5th July 2022</b>")
@@ -176,14 +185,18 @@ server <- function(input, output, session) {
         session$reload()
     })
     
-    # Reactively change outbreak data between dafault and uploaded data
+    # Reactively change outbreak data between case study and uploaded data
     outbreak_data <- reactive({
         
         eventReactive(input$button, {
             input$outbreak_csv <- NULL
         })
 
-        if (is.null(input$outbreak_csv)) {return(defaultData)}
+        if (is.null(input$outbreak_csv)) {
+          if(input$case_study == 1) {return(EbolaData)}
+          if(input$case_study == 2) {return(NipahData)}
+        }
+      
 
         else {
             df <- read.csv(input$outbreak_csv$datapath)
@@ -191,17 +204,21 @@ server <- function(input, output, session) {
         }
     })
     
-    # Reactively change serial interval between default and uploaded file
+    # Reactively change serial interval between case study and uploaded file
     serial_interval <- reactive({
         
         if (is.null(input$serial_interval_csv)) {
-        
+          
+          if(input$case_study == 1) {
             mean <- 15.3; sd <- 9.3
             alpha <- (mean/sd)^2
             beta <- sd^2/mean
             x <- c(1:100) 
             w <- dgamma(x, shape = alpha, scale = beta)
             return(w)
+          }
+          
+          if(input$case_study == 2) {return(as.vector(NipahSerialInterval$Serial_interval))}
         }
         
         else {
@@ -223,7 +240,17 @@ server <- function(input, output, session) {
     
     # Create histogram of the serial interval
     output$serial_interval_plot <- renderPlot({
-        barplot(serial_interval(), xlab = "Serial interval duration", ylab = "Probability")
+      
+      prob <- serial_interval()
+      time <- seq(1, length(prob), by = 1)
+      
+      data <- data.frame(time, prob)
+      
+      ggplot(data = data, aes(x = time, y = prob)) +
+        geom_bar(stat = "identity", fill = "#493756") +
+        scale_x_continuous("Serial interval (days)") +
+        ylab ("Probability") +
+        theme_minimal(base_size = 14) 
     })
 
     # Check validity of numeric inputs for R and k
