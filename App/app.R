@@ -75,7 +75,7 @@ ui <- navbarPage("End of Outbreak Probability",
                                      "text/comma-separated-values,text/plain",
                                      ".csv")),
                 
-                actionButton("button", "Reset to pre-loaded data"),
+                actionButton("button", "Reset to pre-loaded data"), # Button to reload page
                 
                 hr(),
 
@@ -109,7 +109,7 @@ ui <- navbarPage("End of Outbreak Probability",
                  
                  hr(),
 
-                 HTML("<b>Inputs for offspring distribution</b>"),
+                 HTML("<b>Inputs for negative binomial offspring distribution</b>"),
                  
                  p(),
                  
@@ -137,7 +137,8 @@ ui <- navbarPage("End of Outbreak Probability",
                  withSpinner(plotOutput("plot")), # Displays plot
                  # withSpinner(plotlyOutput("plot")), # Displays plot,
                  
-                 HTML("Daily cases are shown using bars and the probability the outbreak is over is displayed as a line plot "),
+                 HTML("Daily reported cases are shown on the left-hand y-axis and represented by the green bars.
+                      Daily end of outbreak probabilities are shown on the right-hand y-axis and displayed as a line plot."),
              ),
          ),
     ),
@@ -147,7 +148,7 @@ ui <- navbarPage("End of Outbreak Probability",
         sidebarLayout(
             
             sidebarPanel(
-                downloadButton("downloadData", "Download results as .csv") 
+                downloadButton("downloadData", "Download results as .csv") # Button to download results
             ),
             
             mainPanel(
@@ -193,11 +194,11 @@ server <- function(input, output, session) {
         })
 
         if (is.null(input$outbreak_csv)) {
-          if(input$case_study == 1) {return(EbolaData)}
+          if(input$case_study == 1) {return(EbolaData)} 
           if(input$case_study == 2) {return(NipahData)}
         }
       
-
+        # Uploaded data
         else {
             df <- read.csv(input$outbreak_csv$datapath)
             return(df)
@@ -209,6 +210,7 @@ server <- function(input, output, session) {
         
         if (is.null(input$serial_interval_csv)) {
           
+          # Ebola serial interval
           if(input$case_study == 1) {
             mean <- 15.3; sd <- 9.3
             alpha <- (mean/sd)^2
@@ -218,9 +220,11 @@ server <- function(input, output, session) {
             return(w)
           }
           
+          # Nipah serial interval
           if(input$case_study == 2) {return(as.vector(NipahSerialInterval$Serial_interval))}
         }
         
+        # Uploaded serial interval
         else {
             df2 <- read.csv(input$serial_interval_csv$datapath)
             df2 <- as.vector(df2$Serial_interval)
@@ -259,7 +263,7 @@ server <- function(input, output, session) {
     iv$add_rule("k", sv_gt(0)) # k > 0
     iv$enable()
     
-    # Days to be plotted after last reported case
+    # Slider for days to be plotted after last reported case - reactive so maximumum length = serial interval length
     output$future_days <- renderUI({
         w <- serial_interval()
         sliderInput("future_days", h5("Days considered after last known case"),
