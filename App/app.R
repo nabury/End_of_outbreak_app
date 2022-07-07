@@ -41,10 +41,10 @@ ui <- navbarPage("End of Outbreak Probability",
         ),
         
         hr(),
-        p("Naomi Bradbury, Francesca Lovell-Read & Robin Thompson"),
+        p("Naomi Bradbury, Francesca Lovell-Read, Jonathan Polonsky & Robin Thompson"),
         p("This app is still in active development. For feedback or questions about the app, please contact Naomi Bradbury n.marsden.1@warwick.ac.uk"),
         p("If you use this app, please cite it as: [insert later]"),
-        HTML("Code and additional files are available on <a href='https://github.com/nabury/End_of_outbreak_app'>Github</a>"),
+        HTML("Code available at <a href='https://github.com/nabury/End_of_outbreak_app'>Github</a>"),
     ),
                  
     tabPanel("Load data",
@@ -97,14 +97,14 @@ ui <- navbarPage("End of Outbreak Probability",
         ),
     ),
     
-    tabPanel("End of Outbreak Probability",
+    tabPanel("End of outbreak probability",
              
          sidebarLayout(
              
              sidebarPanel(
                  
                  # Button to conduct end of outbreak probability calculations
-                 HTML("<b>Calculate outbreak probabilities using the selected inputs: </b>"),
+                 HTML("<b>Calculate end of outbreak probabilities using the selected inputs: </b>"),
                  actionButton("go", "Go"),
                  
                  hr(),
@@ -113,18 +113,8 @@ ui <- navbarPage("End of Outbreak Probability",
                  
                  p(),
                  
-                 # User input for R 
-                 numericInput("R", 
-                              label = "Reproduction number (R)", 
-                              value = 1.8,
-                              step = 0.05), 
-                 
-                 # User input for k 
-                 numericInput("k", 
-                              label = "Dispersion parameter (k)", 
-                              value = 0.18,
-                              step = 0.005), 
-                 
+                 uiOutput("R"),  # Reactive user input for R 
+                 uiOutput("k"), # Reactive user input for k
                  uiOutput("future_days") # Reactive future days slider
              ),
              
@@ -137,8 +127,8 @@ ui <- navbarPage("End of Outbreak Probability",
                  withSpinner(plotOutput("plot")), # Displays plot
                  # withSpinner(plotlyOutput("plot")), # Displays plot,
                  
-                 HTML("Daily reported cases are shown on the left-hand y-axis and represented by the green bars.
-                      Daily end of outbreak probabilities are shown on the right-hand y-axis and displayed as a line plot."),
+                 HTML("Daily reported cases are represented by the green bars and are scaled to the left-hand y-axis.
+                      Daily end of outbreak probabilities are displayed in the line plot and scaled to the right-hand y-axis."),
              ),
          ),
     ),
@@ -176,7 +166,7 @@ ui <- navbarPage("End of Outbreak Probability",
         p("A discrete serial interval can also be uploaded. This must contain only one column of data with the heading: Serial_interval.
           This column should sum to 1. Columns with a sum greater than 1, less than 0.99 or containing negative values will show an error message."),
         
-        HTML("<b>Last updated 5th July 2022</b>")
+        HTML("<b>Last updated 7th July 2022</b>")
     )
 )
 
@@ -263,6 +253,26 @@ server <- function(input, output, session) {
     iv$add_rule("k", sv_gt(0)) # k > 0
     iv$enable()
     
+    # Reactive user input for R
+    output$R <- renderUI({
+      if(input$case_study == 1) {r <- 2.1} # R for Ebola
+      if(input$case_study == 2) {r <- 0.48} # R for Nipah
+      numericInput("R",
+                   label = "Reproduction number (R)",
+                   value = r,
+                   step = 0.05)
+    })
+    
+    # Reactive user input for k
+    output$k <- renderUI({
+      if(input$case_study == 1) {disp <- 0.18} # R for Ebola
+      if(input$case_study == 2) {disp <- 0.06} # R for Nipah
+      numericInput("k",
+                   label = "Dispersion parameter (k)",
+                   value = disp,
+                   step = 0.005)
+    })
+
     # Slider for days to be plotted after last reported case - reactive so maximumum length = serial interval length
     output$future_days <- renderUI({
         w <- serial_interval()
@@ -366,7 +376,11 @@ server <- function(input, output, session) {
             geom_histogram(data = outbreak_data, aes(Onset_day), fill = "#1b9621", colour = "black", binwidth = 1) +
             ggtitle(paste("R =", R_lab, " k =", k_lab)) +
             xlab("Outbreak duration (days)") +
-            scale_y_continuous("Cases", sec.axis = sec_axis(~ (. - ylim.a)/ylim.b, name = "Probability outbreak over"))
+            scale_y_continuous("Cases", sec.axis = sec_axis(~ (. - ylim.a)/ylim.b, name = "Probability outbreak over")) +
+            theme(
+              axis.title.y.left = element_text(colour = "#1b9621"),
+              axis.text.y.left = element_text(colour = "#1b9621")
+            )
         
         plot <- sub_plot +
             geom_line(data = results, aes(x = times, y = ylim.a + p_outbreak_over * ylim.b)) +
