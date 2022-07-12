@@ -84,13 +84,13 @@ ui <- navbarPage("End of Outbreak Probability",
             
             mainPanel(
                 
-                HTML("<b>Outbreak data</b>"),
+                HTML("<b>Outbreak data to be used in end of outbreak probability calculations</b>"),
         
                 tableOutput('outbreak_tbl'), # Display outbreak data in a table
                 
                 hr(),
                 
-                HTML("<b>Serial interval distribution</b>"),
+                HTML("<b>Serial interval distribution to be used in end of outbreak probability calculations</b>"),
                 
                 plotOutput('serial_interval_plot'), # Display the serial interval as a histogram
             ),
@@ -166,7 +166,7 @@ ui <- navbarPage("End of Outbreak Probability",
         p("A discrete serial interval can also be uploaded. This must contain only one column of data with the heading: Serial_interval.
           This column should sum to 1. Columns with a sum greater than 1, less than 0.99 or containing negative values will show an error message."),
         
-        HTML("<b>Last updated 7th July 2022</b>")
+        HTML("<b>Last updated 12th July 2022</b>")
     )
 )
 
