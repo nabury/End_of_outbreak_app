@@ -166,22 +166,18 @@ ui <- navbarPage("End of Outbreak Probability",
         p("A discrete serial interval can also be uploaded. This must contain only one column of data with the heading: Serial_interval.
           This column should sum to 1. Columns with a sum greater than 1, less than 0.99 or containing negative values will show an error message."),
         
-        HTML("<b>Last updated 12th July 2022</b>")
+        HTML("<b>Last updated 14th July 2022</b>")
     )
 )
 
 server <- function(input, output, session) {
     
     observeEvent(input$button, {
-        session$reload()
+      session$reload()
     })
     
     # Reactively change outbreak data between case study and uploaded data
     outbreak_data <- reactive({
-        
-        eventReactive(input$button, {
-            input$outbreak_csv <- NULL
-        })
 
         if (is.null(input$outbreak_csv)) {
           if(input$case_study == 1) {return(EbolaData)} 
@@ -283,67 +279,78 @@ server <- function(input, output, session) {
     # Calculate end of outbreak probabilities
     results <- eventReactive (input$go, {
         
-        # Check input validity
-        req(iv$is_valid()) 
-        
-        # Labels for reactive plot
-        R_lab <- input$R
-        k_lab <- input$k
-        
-        # Get input data
-        outbreak_data <- outbreak_data()
-        w <- serial_interval()
-        
-        end_t <- max(outbreak_data$Onset_day) + input$future_days # Total days from first case to end of calculation
-        
-        # Lengthen serial interval if necessary
-        if (length(w) < end_t) {w <- c(w, rep(0, end_t - length(w)))} 
-
-        # Create empty vector to store end of outbreak probabilities
-        p_outbreak_over <- rep(NA, end_t) 
-        
-        # For each day into the future
-        for (t in 1:end_t) {
-            
-            current_cases <- sum(outbreak_data$Onset_day <= t) # Select only the cases that have already occured
-            p <- 1
-            
-            # For each infected individual
-            for (i in 1:current_cases) {
-                
-                A <- sum(outbreak_data$Infector_ID == i & outbreak_data$Onset_day <= t) # Number of infections already caused by individual i
-                TR <- t - outbreak_data$Onset_day[i] # Difference between current t and reporting date
-                div <- 0
-                
-                # Calculate divisor sum
-                if (TR == 0) {
-                    for (j in A:100) {
-                        div <- div + dnbinom(j, size = input$k, mu = input$R) * (factorial(j)/factorial(A)) * (1^(j-A) / factorial(j-A))
-                    }
-                } else {
-                    for (j in A:100) {
-                        div <- div + dnbinom(j, size = input$k, mu = input$R) * (factorial(j)/factorial(A)) * ((1-(sum(w[1:TR])))^(j-A) / factorial(j-A))
-                    }
-                }
-                
-                # Calculate individual i's probability and multiply by previous
-                p <- p * (dnbinom(A, size = input$k, mu = input$R) / div)
-            }
-            
-            p_outbreak_over[t] <- p # Record probability for day t in vector
+      # Check input validity
+      req(iv$is_valid()) 
+      
+      # Labels for reactive plot
+      
+      if(!is.null(input$outbreak_csv)) {
+        Data_lab <- "User uploaded"
+      } else {
+        if (input$case_study == 1) {
+          Data_lab <- "Ebola Likiti"
+        } else if (input$case_study == 2) {
+          Data_lab <- "Nipah Bangladesh"
         }
-        
-        # Create data frame of times and outbreak probabilities
-        times <- c(1:end_t)
-        results <- data.frame(times, p_outbreak_over)
-        resultsList <- list("results" = results, "R_lab" = R_lab, "k_lab" = k_lab)
-        return(resultsList)
+      }
+    
+      R_lab <- input$R
+      k_lab <- input$k
+      
+      # Get input data
+      outbreak_data <- outbreak_data()
+      w <- serial_interval()
+      
+      end_t <- max(outbreak_data$Onset_day) + input$future_days # Total days from first case to end of calculation
+      
+      # Lengthen serial interval if necessary
+      if (length(w) < end_t) {w <- c(w, rep(0, end_t - length(w)))} 
+
+      # Create empty vector to store end of outbreak probabilities
+      p_outbreak_over <- rep(NA, end_t) 
+      
+      # For each day into the future
+      for (t in 1:end_t) {
+          
+          current_cases <- sum(outbreak_data$Onset_day <= t) # Select only the cases that have already occured
+          p <- 1
+          
+          # For each infected individual
+          for (i in 1:current_cases) {
+              
+              A <- sum(outbreak_data$Infector_ID == i & outbreak_data$Onset_day <= t) # Number of infections already caused by individual i
+              TR <- t - outbreak_data$Onset_day[i] # Difference between current t and reporting date
+              div <- 0
+              
+              # Calculate divisor sum
+              if (TR == 0) {
+                  for (j in A:100) {
+                      div <- div + dnbinom(j, size = input$k, mu = input$R) * (factorial(j)/factorial(A)) * (1^(j-A) / factorial(j-A))
+                  }
+              } else {
+                  for (j in A:100) {
+                      div <- div + dnbinom(j, size = input$k, mu = input$R) * (factorial(j)/factorial(A)) * ((1-(sum(w[1:TR])))^(j-A) / factorial(j-A))
+                  }
+              }
+              
+              # Calculate individual i's probability and multiply by previous
+              p <- p * (dnbinom(A, size = input$k, mu = input$R) / div)
+          }
+          
+          p_outbreak_over[t] <- p # Record probability for day t in vector
+      }
+      
+      # Create data frame of times and outbreak probabilities
+      times <- c(1:end_t)
+      results <- data.frame(times, p_outbreak_over)
+      resultsList <- list("results" = results, "Data_lab" = Data_lab, "R_lab" = R_lab, "k_lab" = k_lab, "outbreak_data" = outbreak_data)
+      return(resultsList)
     })
     
     # Create interactive plot of probability outbreak is over
     # output$plot <- renderPlotly({
     output$plot <- renderPlot({
-        
+      
         # plot <- ggplot(results, aes(x = times,
         #                             y = p_outbreak_over,
         #                             group = 1,
@@ -360,10 +367,11 @@ server <- function(input, output, session) {
         
         inputs <- results()
         results <- inputs$results
+        Data_lab <- inputs$Data_lab
         R_lab <- inputs$R_lab
         k_lab <- inputs$k_lab
-        outbreak_data <- outbreak_data()
-        
+        outbreak_data <- inputs$outbreak_data
+
         # Set y axes limits
         ylim.prim <- c(0, max(table(outbreak_data$Onset_day)))
         ylim.sec <- c(0,1)
@@ -374,13 +382,13 @@ server <- function(input, output, session) {
 
         sub_plot <- ggplot() +
             geom_histogram(data = outbreak_data, aes(Onset_day), fill = "#1b9621", colour = "black", binwidth = 1) +
-            ggtitle(paste("R =", R_lab, " k =", k_lab)) +
+            ggtitle(paste("Outbreak:", Data_lab, " R =", R_lab, " k =", k_lab)) +
             xlab("Outbreak duration (days)") +
             scale_y_continuous("Cases", sec.axis = sec_axis(~ (. - ylim.a)/ylim.b, name = "Probability outbreak over")) +
             theme(
               axis.title.y.left = element_text(colour = "#1b9621"),
               axis.text.y.left = element_text(colour = "#1b9621")
-            )
+            ) 
         
         plot <- sub_plot +
             geom_line(data = results, aes(x = times, y = ylim.a + p_outbreak_over * ylim.b)) +
