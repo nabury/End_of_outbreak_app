@@ -11,6 +11,7 @@ library(shinyjs)
 library(shinyvalidate)
 
 EbolaData <- read.csv("Likiti_outbreak.csv") # Load Ebola data
+EbolaSerialInterval <- read.csv("Ebola_serial_interval.csv") # Load Ebola serial interval
 NipahData <- read.csv("Nipah_outbreak.csv") # Load Nipah data
 NipahSerialInterval <- read.csv("Nipah_serial_interval.csv") # Load Nipah serial interval 
 
@@ -166,8 +167,12 @@ ui <- navbarPage("End of Outbreak Probability",
       
       HTML("<b>Serial interval file</b>"),
       
-      p("A discrete serial interval can also be uploaded. This must contain only one column of data with the heading: Serial_interval.
-        This column should sum to 1. Columns with a sum greater than 1, less than 0.99 or containing negative values will show an error message."),
+      p("A discrete serial interval can also be uploaded. This must contain two columns of data with the headings: Serial_interval, Probability."),
+      
+      HTML("<ul>
+          <li>Column 1: Serial_interval should list possible integer values of the serial interval (in days), starting from 0 and in increments of 1 up to a maximum possible value, i.e. 0,1,2,3,&hellip;. </li>
+          <li>Column 2: Probability should list the corresponding probabilities and must sum to 1. Columns with a sum greater than 1, less than 0.99 or containing negative values will show an error message.</li>
+          </ul>"),
       
       HTML("<b>Last updated 14th July 2022</b>")
   )
@@ -207,31 +212,26 @@ server <- function(input, output, session) {
       if (is.null(input$serial_interval_csv)) {
         
         # Ebola serial interval
-        if(input$case_study == 1) {
-          mean <- 15.3; sd <- 9.3
-          alpha <- (mean/sd)^2
-          beta <- sd^2/mean
-          x <- c(1:100) 
-          w <- dgamma(x, shape = alpha, scale = beta)
-          return(w)
-        }
+        if(input$case_study == 1) {return(as.vector(EbolaSerialInterval$Probability))}
         
         # Nipah serial interval
-        if(input$case_study == 2) {return(as.vector(NipahSerialInterval$Serial_interval))}
+        if(input$case_study == 2) {return(as.vector(NipahSerialInterval$Probability))}
       }
       
       # Uploaded serial interval
       else {
           df2 <- read.csv(input$serial_interval_csv$datapath)
-          df2 <- as.vector(df2$Serial_interval)
+          df2a <- as.vector(df2$Serial_interval)
+          df2b <- as.vector(df2$Probability)
           
           # Check for validity for user inputted serial interval
           validate(
-              need(sum(df2) <= 1, "Serial interval too large"),
-              need(sum(df2) >= 0.99, "Serial interval too small"),
-              need(!any(df2<0), "Negative value in serial interval")
+              need(all(df2a==0:(length(df2a)-1)), "Probabilities must be provided for all serial interval values from 0 to the maximum possible value"),
+              need(sum(df2b) <= 1+1e-5, "Serial interval too large"),
+              need(sum(df2b) >= 0.99, "Serial interval too small"),
+              need(!any(df2b<0), "Negative value in serial interval")
           )
-          return(df2)
+          return(df2b/sum(df2b))
       }
   })
   
@@ -242,7 +242,7 @@ server <- function(input, output, session) {
   output$serial_interval_plot <- renderPlot({
     
     prob <- serial_interval()
-    time <- seq(1, length(prob), by = 1)
+    time <- seq(0, length(prob)-1, by = 1)
     
     data <- data.frame(time, prob)
     
@@ -314,7 +314,7 @@ server <- function(input, output, session) {
     end_t <- max(outbreak_data$Onset_day) + input$future_days # Total days from first case to end of calculation
     
     # Lengthen serial interval if necessary
-    if (length(w) < end_t) {w <- c(w, rep(0, end_t - length(w)))} 
+    if (length(w) < end_t + 1) {w <- c(w, rep(0, end_t + 1 - length(w)))} 
 
     # Create empty vector to store end of outbreak probabilities
     p_outbreak_over <- rep(NA, end_t) 
@@ -333,14 +333,8 @@ server <- function(input, output, session) {
             div <- 0
             
             # Calculate divisor sum
-            if (TR == 0) {
-                for (j in A:100) {
-                    div <- div + dnbinom(j, size = input$k, mu = input$R) * (factorial(j)/factorial(A)) * (1^(j-A) / factorial(j-A))
-                }
-            } else {
-                for (j in A:100) {
-                    div <- div + dnbinom(j, size = input$k, mu = input$R) * (factorial(j)/factorial(A)) * ((1-(sum(w[1:TR])))^(j-A) / factorial(j-A))
-                }
+            for (j in A:100) {
+                div <- div + dnbinom(j, size = input$k, mu = input$R) * (factorial(j)/factorial(A)) * ((1-(sum(w[1:(TR+1)])))^(j-A) / factorial(j-A))
             }
             
             # Calculate individual i's probability and multiply by previous
