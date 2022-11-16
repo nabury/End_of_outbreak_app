@@ -309,37 +309,34 @@ server <- function(input, output, session) {
     
     # Get input data
     outbreak_data <- outbreak_data()
+    k_offspring <- input$k
+    R_offspring <- input$R
+    p0_offspring <- R_offspring/(R_offspring+k_offspring)
     w <- serial_interval()
     
     end_t <- max(outbreak_data$Onset_day) + input$future_days # Total days from first case to end of calculation
     
     # Lengthen serial interval if necessary
     if (length(w) < end_t + 1) {w <- c(w, rep(0, end_t + 1 - length(w)))} 
-
+    
+    # Cumulative serial interval distribution
+    
+    F <- cumsum(w)
+    
     # Create empty vector to store end of outbreak probabilities
     p_outbreak_over <- rep(NA, end_t) 
     
     # For each day into the future
     for (t in 1:end_t) {
         
-        current_cases <- sum(outbreak_data$Onset_day <= t) # Select only the cases that have already occured
-        p <- 1
-        
-        # For each infected individual
-        for (i in 1:current_cases) {
-            
-            A <- sum(outbreak_data$Infector_ID == i & outbreak_data$Onset_day <= t) # Number of infections already caused by individual i
-            TR <- t - outbreak_data$Onset_day[i] # Difference between current t and reporting date
-            div <- 0
-            
-            # Calculate divisor sum
-            for (j in A:100) {
-                div <- div + dnbinom(j, size = input$k, mu = input$R) * (factorial(j)/factorial(A)) * ((1-(sum(w[1:(TR+1)])))^(j-A) / factorial(j-A))
-            }
-            
-            # Calculate individual i's probability and multiply by previous
-            p <- p * (dnbinom(A, size = input$k, mu = input$R) / div)
-        }
+        current_cases <- (outbreak_data$Onset_day <= t) # Select only the cases that have already occured
+        Onset_day_current <- outbreak_data$Onset_day[current_cases]
+        Infector_ID_current <- outbreak_data$Infector_ID[current_cases]
+
+        A <- tabulate(Infector_ID_current, nbins = length(Infector_ID_current)) # Number of infections already caused by each individual
+        TR <- t - Onset_day_current # Difference between current t and reporting date
+
+        p <- prod((1-p0_offspring*(1-F[TR+1]))^(k_offspring+A))
         
         p_outbreak_over[t] <- p # Record probability for day t in vector
     }
