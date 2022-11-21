@@ -1,7 +1,7 @@
-###################################
-# End Of Outbreak Probability App # 
-# n.marsden.1@warwick.ac.uk       #
-###################################
+##########################################
+# End Of Outbreak Probability App        # 
+# Naomi Bradbury nvm4@leicester.ac.uk    #
+##########################################
 
 library(ggplot2)
 library(plotly)
@@ -45,8 +45,8 @@ ui <- navbarPage("End of Outbreak Probability",
       ),
       
       hr(),
-      p("Naomi Bradbury, Francesca Lovell-Read, Jonathan Polonsky & Robin Thompson"),
-      p("This app is still in active development. For feedback or questions about the app, please contact Naomi Bradbury n.marsden.1@warwick.ac.uk"),
+      p("Naomi Bradbury, William Hart, Francesca Lovell-Read, Jonathan Polonsky & Robin Thompson"),
+      p("This app is still in active development. For feedback or questions about the app, please contact Naomi Bradbury nvm4@leicester.ac.uk"),
       p("If you use this app, please cite it as: [insert later]"),
       HTML("Code available at <a href='https://github.com/nabury/End_of_outbreak_app'>Github</a>"),
   ),
@@ -174,7 +174,7 @@ ui <- navbarPage("End of Outbreak Probability",
           <li>Column 2: Probability should list the corresponding probabilities and must sum to 1. Columns with a sum greater than 1, less than 0.99 or containing negative values will show an error message.</li>
           </ul>"),
       
-      HTML("<b>Last updated 14th July 2022</b>")
+      HTML("<b>Last updated 21st November 2022</b>")
   )
 )
 
