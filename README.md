@@ -1,6 +1,6 @@
-# End of outbreak probabilities app
+# End-of-outbreak probability app
 
-Shiny app that generates and displays end of outbreak probabilities for infectious disease outbreaks.
+Shiny app that generates and displays end-of-outbreak probabilities for infectious disease outbreaks.
 
 Download the folder titled App to be able to run the app on your own machine using R.  
 
@@ -20,4 +20,4 @@ App folder contains:
 
 Users are able to upload their own outbreak data and serial interval data to the app in the form of csv files.  
 
-End of outbreak probabilities can also be downloaded from the app as csv files.
+End-of-outbreak probability calculations can also be downloaded from the app as csv files.
