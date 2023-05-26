@@ -4,10 +4,8 @@
 ##########################################
 
 library(ggplot2)
-library(plotly)
 library(shiny)
 library(shinycssloaders)
-library(shinyjs) 
 library(shinyvalidate)
 
 EbolaData <- read.csv("Likiti_outbreak.csv") # Load Ebola data
@@ -15,13 +13,12 @@ EbolaSerialInterval <- read.csv("Ebola_serial_interval.csv") # Load Ebola serial
 NipahData <- read.csv("Nipah_outbreak.csv") # Load Nipah data
 NipahSerialInterval <- read.csv("Nipah_serial_interval.csv") # Load Nipah serial interval 
 
-ui <- navbarPage("End of Outbreak Probability",
+ui <- navbarPage("End-of-Outbreak Probability",
                  
-  # useShinyjs(),
-  
+
   tabPanel("Home",
            
-      h3("End of Outbreak Probability v1"),
+      h3("End-of-Outbreak Probability v1.0.0"),
       
       br(),
       
@@ -31,7 +28,11 @@ ui <- navbarPage("End of Outbreak Probability",
       
               img(src='virus.jpg', align = "left", height = 250, width = 320),
       
-              HTML("Photo by <a href='https://unsplash.com/@cdc?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText'>CDC</a> on <a href='https://unsplash.com/s/photos/virus-corona?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText'>Unsplash</a>")
+              p("Photo by",
+                tags$a(href='https://unsplash.com/@cdc?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText', "CDC"),
+                "on",  
+                tags$a(href='https://unsplash.com/', "Unsplash"), 
+                target="_blank")
       
           ),
           
@@ -39,16 +40,17 @@ ui <- navbarPage("End of Outbreak Probability",
               
           column (5, br(),
                   
-              h4("Calculate the end of outbreak probability for outbreaks with a known transmission tree."),
-              p("Powered by R Shiny")
+              h4("Calculate the end-of-outbreak probability for outbreaks with a known transmission tree."),
+              p("For guidance on using this app, please consult the",
+                tags$a(href='https://github.com/nabury/End_of_outbreak_app/wiki/User-Guide',"User Guide"))
           ),
       ),
       
       hr(),
       p("Naomi Bradbury, William Hart, Francesca Lovell-Read, Jonathan Polonsky & Robin Thompson"),
-      p("This app is still in active development. For feedback or questions about the app, please contact Naomi Bradbury nvm4@leicester.ac.uk"),
+      p("This app is still in active development. For feedback or questions about the app, please contact Naomi Bradbury at nvm4@leicester.ac.uk"),
       p("If you use this app, please cite it as: [insert later]"),
-      HTML("Code available at <a href='https://github.com/nabury/End_of_outbreak_app'>Github</a>"),
+      p("Code available on", tags$a(href='https://github.com/nabury/End_of_outbreak_app', "Github"), target="_blank"),
   ),
                
   tabPanel("Load data",
@@ -83,32 +85,34 @@ ui <- navbarPage("End of Outbreak Probability",
               
               hr(),
 
-              p("See documentation tab for guidance on uploading data")
+              p("Please consult the", 
+                tags$a(href='https://github.com/nabury/End_of_outbreak_app/wiki/User-Guide', "User Guide"),
+                "for instructions on how to upload data files")
           ),
           
           mainPanel(
               
-              HTML("<b>Outbreak data to be used in end of outbreak probability calculations</b>"),
+              HTML("<b>Outbreak data to be used in end-of-outbreak probability calculations</b>"),
       
               tableOutput('outbreak_tbl'), # Display outbreak data in a table
               
               hr(),
               
-              HTML("<b>Serial interval distribution to be used in end of outbreak probability calculations</b>"),
+              HTML("<b>Serial interval distribution to be used in end-of-outbreak probability calculations</b>"),
               
               plotOutput('serial_interval_plot'), # Display the serial interval as a histogram
           ),
       ),
   ),
   
-  tabPanel("End of outbreak probability",
+  tabPanel("End-of-outbreak probability",
            
        sidebarLayout(
            
            sidebarPanel(
                
                # Button to conduct end of outbreak probability calculations
-               HTML("<b>Calculate end of outbreak probabilities using the selected inputs: </b>"),
+               HTML("<b>Calculate end-of-outbreak probabilities using the selected inputs: </b>"),
                actionButton("go", "Go"),
                
                hr(),
@@ -124,15 +128,14 @@ ui <- navbarPage("End of Outbreak Probability",
            
            mainPanel(
                
-               HTML("<b>Outbreak cases and end of outbreak probabilities</b>"),
+               HTML("<b>Outbreak cases and end-of-outbreak probabilities</b>"),
                
                p(),
 
                withSpinner(plotOutput("plot")), # Displays plot
-               # withSpinner(plotlyOutput("plot")), # Displays plot,
-               
+
                HTML("Daily reported cases are represented by the green bars and are scaled to the left-hand y-axis.
-                    Daily end of outbreak probabilities are displayed in the line plot and scaled to the right-hand y-axis."),
+                    Daily end-of-outbreak probabilities are displayed in the line plot and scaled to the right-hand y-axis."),
            ),
        ),
   ),
@@ -150,42 +153,9 @@ ui <- navbarPage("End of Outbreak Probability",
           ),
       ),
   ),
-  
-  tabPanel("Documentation",
-           
-      HTML("<b>Outbreak data file</b>"),
-      
-      p("A csv file containing outbreak data can be uploaded to the app.
-        The file must consist of three columns with the headings named exactly: ID, Onset_day, Infector_ID.
-        All columns must contain only numeric, integer data."),
-      
-      HTML("<ul>
-          <li>Column 1: ID must be numbered in integer order i.e. 1,2,3. </li>
-          <li>Column 2: Onset_day contains the outbreak day when the case began i.e. the number of days after the first reported case.</li>
-          <li>Infector_ID: Refers to the ID of the individual who infected this case. If this is unknown, it should be set to zero.</li>
-          </ul>"),
-      
-      HTML("<b>Serial interval file</b>"),
-      
-      p("A discrete serial interval can also be uploaded. This must contain two columns of data with the headings: Serial_interval, Probability."),
-      
-      HTML("<ul>
-          <li>Column 1: Serial_interval should list possible integer values of the serial interval (in days), starting from 0 and in increments of 1 up to a maximum possible value, i.e. 0,1,2,3,&hellip;. </li>
-          <li>Column 2: Probability should list the corresponding probabilities and must sum to 1. Columns with a sum greater than 1, less than 0.99 or containing negative values will show an error message.</li>
-          </ul>"),
-      
-      HTML("<b>Last updated 21st November 2022</b>")
-  )
 )
 
 server <- function(input, output, session) {
-    
-  # observeEvent(input$reset, {
-  #   input$outbreak_data <- NULL
-  #   input$serial_interval <- NULL
-  #   reset('outbreak_csv')
-  #   reset('serial_interval_csv')
-  # })
   
   observeEvent(input$reset, {
     session$reload()
@@ -349,23 +319,8 @@ server <- function(input, output, session) {
   })
   
   # Create interactive plot of probability outbreak is over
-  # output$plot <- renderPlotly({
   output$plot <- renderPlot({
     
-      # plot <- ggplot(results, aes(x = times,
-      #                             y = p_outbreak_over,
-      #                             group = 1,
-      #                             text = paste("Probability: ",signif(p_outbreak_over, digits = 3),
-      #                                          "<br>Time: ",times))) +
-      #     geom_line()+
-      #     geom_point() +
-      #     geom_histogram(data = outbreak_data, aes(x = Onset_day, y = count))
-      #     xlab("Time since end of case data (days)") +
-      #     ylab("Probability outbreak over") +
-      #     ylim(c(0:1))
-      #
-      # plot <- ggplotly(plot, tooltip = c("text"))
-      
       inputs <- results()
       results <- inputs$results
       Data_lab <- inputs$Data_lab
@@ -385,7 +340,7 @@ server <- function(input, output, session) {
           geom_histogram(data = outbreak_data, aes(Onset_day), fill = "#1b9621", colour = "black", binwidth = 1) +
           ggtitle(paste("Outbreak:", Data_lab, " R =", R_lab, " k =", k_lab)) +
           xlab("Outbreak duration (days)") +
-          scale_y_continuous("Cases", sec.axis = sec_axis(~ (. - ylim.a)/ylim.b, name = "Probability outbreak over")) +
+          scale_y_continuous("Cases", sec.axis = sec_axis(~ (. - ylim.a)/ylim.b, name = "End-of-outbreak probability")) +
           theme(
             axis.title.y.left = element_text(colour = "#1b9621"),
             axis.text.y.left = element_text(colour = "#1b9621")
@@ -395,8 +350,6 @@ server <- function(input, output, session) {
           geom_line(data = results, aes(x = times, y = ylim.a + p_outbreak_over * ylim.b)) +
           geom_point(data = results, aes(x = times, y = ylim.a + p_outbreak_over * ylim.b)) 
       
-      # plot <- ggplotly(plot, tooltip = c("text"))
-
       return(plot)
   })
   
