@@ -18,7 +18,7 @@ ui <- navbarPage("End-of-Outbreak Probability",
 
   tabPanel("Home",
            
-      h3("End-of-Outbreak Probability v1.0.0"),
+      h3("End-of-Outbreak Probability"),
       
       br(),
       
