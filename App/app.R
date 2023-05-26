@@ -13,7 +13,7 @@ EbolaSerialInterval <- read.csv("Ebola_serial_interval.csv") # Load Ebola serial
 NipahData <- read.csv("Nipah_outbreak.csv") # Load Nipah data
 NipahSerialInterval <- read.csv("Nipah_serial_interval.csv") # Load Nipah serial interval 
 
-ui <- navbarPage("End-of-Outbreak Probability",
+ui <- navbarPage("End-of-Outbreak Probability v1.0.0",
                  
 
   tabPanel("Home",
