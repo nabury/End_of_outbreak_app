@@ -1,4 +1,4 @@
-# End-of-outbreak probability app
+# End-of-outbreak probability app v1.0.0
 
 Shiny app that generates and displays end-of-outbreak probabilities for infectious disease outbreaks.
 
