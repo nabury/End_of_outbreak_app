@@ -95,7 +95,9 @@ SOFTWARE.')
 
               p("Please consult the", 
                 tags$a(href='https://github.com/nabury/End_of_outbreak_app/wiki/User-Guide', "User Guide"),
-                "for instructions on how to upload data files")
+                "for instructions on how to upload data files"),
+              p("Disclaimer: All data uploaded by the user are the user’s responsibility. The user should 
+                ensure that the data are accurate and are anonymised such that individuals are not identifiable.")
           ),
           
           mainPanel(
