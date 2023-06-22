@@ -51,6 +51,14 @@ ui <- navbarPage("End-of-Outbreak Probability v1.0.0",
       p("This app is still in active development. For feedback or questions about the app, please contact Naomi Bradbury at nvm4@leicester.ac.uk"),
       p("If you use this app, please cite it as: [insert later]"),
       p("Code available on", tags$a(href='https://github.com/nabury/End_of_outbreak_app', "Github"), target="_blank"),
+      hr(),
+      p('THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.')
   ),
                
   tabPanel("Load data",
