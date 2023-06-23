@@ -3,6 +3,7 @@
 # Naomi Bradbury nvm4@leicester.ac.uk    #
 ##########################################
 
+library(dplyr)
 library(ggplot2)
 library(shiny)
 library(shinycssloaders)
@@ -365,7 +366,7 @@ server <- function(input, output, session) {
   
   # Table of end of outbreak probability results
   output$results_tbl <- renderTable({
-      results_tbl <- results()$results %>%
+      results_tbl <- results()$results |>
       rename(Outbreak_day = times, End_of_outbreak_probability = p_outbreak_over)
   })
   
@@ -373,7 +374,7 @@ server <- function(input, output, session) {
   output$downloadData <- downloadHandler(
       filename = "End_of_outbreak.csv",
       content = function(file) {
-          write.csv(results()$results %>%
+          write.csv(results()$results |>
                         rename(Outbreak_day = times, End_of_outbreak_probability = p_outbreak_over),
                     file)
       }
