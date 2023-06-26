@@ -9,7 +9,7 @@ library(shiny)
 library(shinycssloaders)
 library(shinyvalidate)
 
-EbolaData <- read.csv("Likiti_outbreak.csv") # Load Ebola data
+EbolaData <- read.csv("Likati_outbreak.csv") # Load Ebola data
 EbolaSerialInterval <- read.csv("Ebola_serial_interval.csv") # Load Ebola serial interval
 NipahData <- read.csv("Nipah_outbreak.csv") # Load Nipah data
 NipahSerialInterval <- read.csv("Nipah_serial_interval.csv") # Load Nipah serial interval 
@@ -70,7 +70,7 @@ SOFTWARE.')
             
               # Case study selector
               selectInput("case_study", label = ("Select case study"), 
-                        choices = list("Ebola Likiti" = 1, "Nipah Bangladesh" = 2), 
+                        choices = list("Ebola Likati" = 1, "Nipah Bangladesh" = 2), 
                         selected = 1),
               
               h4("OR"),
@@ -279,7 +279,7 @@ server <- function(input, output, session) {
       Data_lab <- "User uploaded"
     } else {
       if (input$case_study == 1) {
-        Data_lab <- "Ebola Likiti"
+        Data_lab <- "Ebola Likati"
       } else if (input$case_study == 2) {
         Data_lab <- "Nipah Bangladesh"
       }
