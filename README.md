@@ -2,7 +2,7 @@
 
 Shiny app that generates and displays end-of-outbreak probabilities for infectious disease outbreaks.
 
-Available at: https://epimodelling.shinyapps.io/EndOfOutbreak/.  
+Available at: https://outbreakmodelling.shinyapps.io/end-of-outbreak/.  
 Alternatively, download the code provided here to run the app on your own machine using R.  
 
 App folder contains:  
