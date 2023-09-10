@@ -14,7 +14,7 @@ EbolaSerialInterval <- read.csv("Ebola_serial_interval.csv") # Load Ebola serial
 NipahData <- read.csv("Nipah_outbreak.csv") # Load Nipah data
 NipahSerialInterval <- read.csv("Nipah_serial_interval.csv") # Load Nipah serial interval 
 
-ui <- navbarPage("End-of-Outbreak Probability v1.0.0",
+ui <- navbarPage("End-of-Outbreak Probability v1.0.1",
                  
 
   tabPanel("Home",
@@ -242,8 +242,8 @@ server <- function(input, output, session) {
   
   # Reactive user input for R
   output$R <- renderUI({
-    if(input$case_study == 1) {r <- 2.1} # R for Ebola
-    if(input$case_study == 2) {r <- 0.48} # R for Nipah
+    if(input$case_study == 1) {r <- 0.95} # R for Ebola
+    if(input$case_study == 2) {r <- 0.20} # R for Nipah
     numericInput("R",
                  label = "Reproduction number (R)",
                  value = r,
