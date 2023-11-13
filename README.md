@@ -1,3 +1,6 @@
+[![DOI](https://zenodo.org/badge/453943637.svg)](https://zenodo.org/doi/10.5281/zenodo.7974321)
+
+
 # End-of-outbreak probability app v1.0.2
 
 Shiny app that generates and displays end-of-outbreak probabilities for infectious disease outbreaks.
