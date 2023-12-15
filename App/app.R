@@ -14,7 +14,7 @@ EbolaSerialInterval <- read.csv("Ebola_serial_interval.csv") # Load Ebola serial
 NipahData <- read.csv("Nipah_outbreak.csv") # Load Nipah data
 NipahSerialInterval <- read.csv("Nipah_serial_interval.csv") # Load Nipah serial interval 
 
-ui <- navbarPage("End-of-Outbreak Probability v1.0.3",
+ui <- navbarPage("End-of-Outbreak Probability v1.0.4",
                  
 
   tabPanel("Home",
@@ -50,7 +50,11 @@ ui <- navbarPage("End-of-Outbreak Probability v1.0.3",
       hr(),
       p("Naomi Bradbury, William Hart, Francesca Lovell-Read, Jonathan Polonsky & Robin Thompson"),
       p("For feedback or questions about the app, please contact Naomi Bradbury at nvm4@leicester.ac.uk"),
-      p("If you use this app, please cite it as: [insert later]"),
+      p("If you use this app, please cite it as: ",
+        tags$a(href = 'https://doi.org/10.1098/rsif.2023.0374', 
+        "Bradbury NV, Hart WS, Lovell-Read FA, Polonsky JA and Thompson RN. 
+        2023. Exact calculation of end-of-outbreak probabilities using contact tracing data. J.R. Soc. Interface.
+        20:20230374.", target = "_blank")),
       p("Code available on", tags$a(href='https://github.com/nabury/End_of_outbreak_app', "Github", target="_blank")),
       hr(),
       p('THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
