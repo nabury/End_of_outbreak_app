@@ -7,7 +7,7 @@ Shiny app that generates and displays end-of-outbreak probabilities for infectio
 
 Accompanies the article: Bradbury NV, Hart WS, Lovell-Read FA, Polonsky JA and Thompson RN. 2023. Exact calculation of end-of-outbreak probabilities using contact tracing data. J.R. Soc. Interface.20:20230374. https://doi.org/10.1098/rsif.2023.0374
 
-Available at: [https://outbreakmodelling.shinyapps.io/end-of-outbreak/](https://nabury.github.io/end-of-outbreak.html)  
+Available at: https://nabury.github.io/end-of-outbreak.html    
 Alternatively, download the code provided here to run the app on your own machine using R.  
 
 App folder contains:  
