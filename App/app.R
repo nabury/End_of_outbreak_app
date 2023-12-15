@@ -14,7 +14,7 @@ EbolaSerialInterval <- read.csv("Ebola_serial_interval.csv") # Load Ebola serial
 NipahData <- read.csv("Nipah_outbreak.csv") # Load Nipah data
 NipahSerialInterval <- read.csv("Nipah_serial_interval.csv") # Load Nipah serial interval 
 
-ui <- navbarPage("End-of-Outbreak Probability v1.0.2",
+ui <- navbarPage("End-of-Outbreak Probability v1.0.3",
                  
 
   tabPanel("Home",
@@ -29,10 +29,10 @@ ui <- navbarPage("End-of-Outbreak Probability v1.0.2",
       
               img(src='virus.jpg', align = "left", height = 250, width = 320),
       
-              p("Photo by",
-                tags$a(href='https://unsplash.com/@cdc?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText', "CDC"),
+              p("Image by",
+                tags$a(href='https://unsplash.com/@cdc?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText', "CDC", target="_blank"),
                 "on",  
-                tags$a(href='https://unsplash.com/', "Unsplash"), 
+                tags$a(href='https://unsplash.com/', "Unsplash", target="_blank"), 
                 target="_blank")
       
           ),
@@ -43,15 +43,19 @@ ui <- navbarPage("End-of-Outbreak Probability v1.0.2",
                   
               h4("Calculate the end-of-outbreak probability for outbreaks with a known transmission tree."),
               p("For guidance on using this app, please consult the",
-                tags$a(href='https://github.com/nabury/End_of_outbreak_app/wiki/User-Guide',"User Guide"))
+                tags$a(href='https://github.com/nabury/End_of_outbreak_app/wiki/User-Guide',"User Guide", target="_blank"))
           ),
       ),
       
       hr(),
       p("Naomi Bradbury, William Hart, Francesca Lovell-Read, Jonathan Polonsky & Robin Thompson"),
-      p("This app is still in active development. For feedback or questions about the app, please contact Naomi Bradbury at nvm4@leicester.ac.uk"),
-      p("If you use this app, please cite it as: [insert later]"),
-      p("Code available on", tags$a(href='https://github.com/nabury/End_of_outbreak_app', "Github"), target="_blank"),
+      p("For feedback or questions about the app, please contact Naomi Bradbury at nvm4@leicester.ac.uk"),
+      p("If you use this app, please cite it as: ",
+        tags$a(href = 'https://doi.org/10.1098/rsif.2023.0374', 
+        "Bradbury NV, Hart WS, Lovell-Read FA, Polonsky JA and Thompson RN. 
+        2023. Exact calculation of end-of-outbreak probabilities using contact tracing data. J.R. Soc. Interface.
+        20:20230374.", target = "_blank")),
+      p("Code available on", tags$a(href='https://github.com/nabury/End_of_outbreak_app', "Github", target="_blank")),
       hr(),
       p('THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
