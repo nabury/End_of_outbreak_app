@@ -1,5 +1,4 @@
-[![DOI](https://zenodo.org/badge/453943637.svg)](https://zenodo.org/doi/10.5281/zenodo.7974321)
-
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10392011.svg)](https://doi.org/10.5281/zenodo.10392011)
 
 # End-of-outbreak probability app v1.0.3
 
